@@ -3,6 +3,9 @@
 //   #/new         create a pool
 //   #/p/:id       a pool (picks, leaderboard, all picks, organizer tools)
 
+import { favoriteIndex, formatMoneyline, parseOptionLine, rollIndex, winChances } from './odds.js';
+import { claudeEntry, slateToPool } from './slate.js';
+
 const app = document.getElementById('app');
 const STORAGE_KEY = 'pool:v1';
 
@@ -109,8 +112,6 @@ async function route() {
   render(h('div', { class: 'card empty' }, 'Page not found. ', h('a', { href: '#/' }, 'Go home')));
 }
 
-window.addEventListener('hashchange', route);
-route();
 
 // ---------- home ----------
 
@@ -188,7 +189,14 @@ const TEMPLATES = {
 function createPage() {
   document.title = 'New pool · Pool';
   let questions = [];
+  let slate = null;
   const errorSlot = h('div');
+  const slateButtons = h('div', { class: 'row', style: 'margin-top:12px' });
+  const claudeToggle = h('input', { type: 'checkbox', id: 'f-claude', checked: true, style: 'width:auto;margin-right:8px' });
+  const claudeRow = h('div', { class: 'field', hidden: true },
+    h('label', { for: 'f-claude', style: 'display:flex;align-items:center;font-weight:500' }, claudeToggle,
+      'Add Claude’s picks as an entry'),
+    h('div', { class: 'hint' }, 'Claude researched this week’s odds, took the favorite in clear games and rolled the dice on the close ones.'));
   const questionList = h('div');
   const fields = {
     name: h('input', { id: 'f-name', maxlength: '80', required: true, placeholder: 'e.g. March bracket challenge' }),
@@ -198,23 +206,56 @@ function createPage() {
     tiebreakerPrompt: h('input', { id: 'f-tb', maxlength: '200', placeholder: 'e.g. Total points in the final' }),
   };
 
-  function applyTemplate(key) {
-    const t = TEMPLATES[key];
+  function applyTemplate(key, t = TEMPLATES[key]) {
     fields.name.value = t.name ?? '';
     fields.description.value = t.description ?? '';
     fields.tiebreakerPrompt.value = t.tiebreakerPrompt ?? '';
-    questions = t.questions.map((q) => ({ ...q, options: [...q.options] }));
+    fields.lockAt.value = '';
+    questions = t.questions.map((q) => ({
+      prompt: q.prompt,
+      points: q.points ?? 1,
+      lines: q.options.map((o, i) => (q.odds?.[i] != null ? `${o} | ${formatMoneyline(q.odds[i])}` : o)),
+    }));
+    slate = null;
+    claudeRow.hidden = true;
     drawQuestions();
   }
+
+  async function applySlate(file) {
+    try {
+      const res = await fetch(`/weeks/${encodeURIComponent(file)}`);
+      if (!res.ok) throw new Error('Could not load that week');
+      const loaded = await res.json();
+      const t = slateToPool(loaded);
+      applyTemplate(null, t);
+      if (t.lockAt && Date.parse(t.lockAt) > Date.now()) {
+        const d = new Date(t.lockAt);
+        fields.lockAt.value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      } else if (t.lockAt) {
+        toast('Heads up: the first game of this week has already kicked off.');
+      }
+      slate = loaded;
+      claudeRow.hidden = !loaded.claude;
+    } catch (err) {
+      toast(err.message);
+    }
+  }
+
+  fetch('/weeks/index.json')
+    .then((r) => (r.ok ? r.json() : { weeks: [] }))
+    .then(({ weeks }) => slateButtons.replaceChildren(
+      ...(weeks.length ? [h('span', { class: 'small muted', style: 'width:100%' }, 'This week’s games, with researched odds:')] : []),
+      ...weeks.slice(0, 3).map((w) => h('button', { type: 'button', class: 'btn btn-small', onclick: () => applySlate(w.file) }, `🏈 ${w.title}`))))
+    .catch(() => {});
 
   function drawQuestions() {
     questionList.replaceChildren(...questions.map((q, i) => {
       const optionsBox = h('textarea', {
-        rows: Math.max(2, q.options.length),
+        rows: Math.max(2, q.lines.length),
         placeholder: 'One option per line',
-        oninput: (e) => { q.options = e.target.value.split('\n'); },
+        oninput: (e) => { q.lines = e.target.value.split('\n'); },
       });
-      optionsBox.value = q.options.join('\n');
+      optionsBox.value = q.lines.join('\n');
       return h('div', { class: 'question-editor' },
         h('div', { class: 'row spread' },
           h('h3', {}, `Question ${i + 1}`),
@@ -229,7 +270,7 @@ function createPage() {
           h('div', { class: 'field' },
             h('label', {}, 'Points'),
             h('input', { type: 'number', min: '1', max: '100', value: String(q.points), oninput: (e) => { q.points = e.target.value; } }))),
-        h('label', {}, 'Options ', h('span', { class: 'hint' }, 'one per line')),
+        h('label', {}, 'Options ', h('span', { class: 'hint' }, 'one per line; add odds like “Bears | -118” to weight the dice')),
         optionsBox);
     }));
   }
@@ -246,12 +287,25 @@ function createPage() {
         entryFee: fields.entryFee.value,
         lockAt: fields.lockAt.value ? new Date(fields.lockAt.value).toISOString() : null,
         tiebreakerPrompt: fields.tiebreakerPrompt.value,
-        questions: questions.map((q) => ({ prompt: q.prompt, options: q.options, points: q.points })),
+        questions: questions.map((q) => {
+          const parsed = q.lines.map(parseOptionLine);
+          return { prompt: q.prompt, options: parsed.map((o) => o.name), odds: parsed.map((o) => o.odds), points: q.points };
+        }),
       };
       const { pool, adminToken } = await api('/pools', { method: 'POST', body });
       savePool(pool.id, { name: pool.name, adminToken });
+      const claude = slate && claudeToggle.checked && !claudeRow.hidden && claudeEntry(slate, pool);
+      let note = 'Pool created. Share the link to collect picks.';
+      if (claude) {
+        try {
+          await api(`/pools/${encodeURIComponent(pool.id)}/entries`, { method: 'POST', body: claude });
+          note = 'Pool created with Claude’s picks. Share the link to collect yours.';
+        } catch (err) {
+          note = `Pool created, but Claude’s picks couldn’t be added: ${err.message}`;
+        }
+      }
       location.hash = `#/p/${encodeURIComponent(pool.id)}/admin`;
-      toast('Pool created. Share the link to collect picks.');
+      toast(note);
     } catch (err) {
       errorSlot.replaceChildren(errorBox(err.message));
       errorSlot.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -266,7 +320,8 @@ function createPage() {
       h('label', {}, 'Start from'),
       h('div', { class: 'row' },
         Object.entries({ blank: 'Blank', football: 'Weekly football picks', awards: 'Awards ballot', baby: 'Baby pool' })
-          .map(([k, label]) => h('button', { type: 'button', class: 'btn btn-secondary btn-small', onclick: () => applyTemplate(k) }, label)))),
+          .map(([k, label]) => h('button', { type: 'button', class: 'btn btn-secondary btn-small', onclick: () => applyTemplate(k) }, label))),
+      slateButtons),
     h('form', { class: 'card', onsubmit: submit, novalidate: true },
       errorSlot,
       h('div', { class: 'field' }, h('label', { for: 'f-name' }, 'Pool name'), fields.name),
@@ -274,11 +329,12 @@ function createPage() {
       h('div', { class: 'grid-2' },
         h('div', { class: 'field' }, h('label', { for: 'f-fee' }, 'Entry fee ', h('span', { class: 'hint' }, 'optional, for showing the pot')), fields.entryFee),
         h('div', { class: 'field' }, h('label', { for: 'f-lock' }, 'Picks lock at ', h('span', { class: 'hint' }, 'optional; you can also lock by hand')), fields.lockAt)),
+      claudeRow,
       h('h2', {}, 'Questions'),
       questionList,
       h('button', {
         type: 'button', class: 'btn btn-secondary btn-small',
-        onclick: () => { questions.push({ prompt: '', options: ['', ''], points: 1 }); drawQuestions(); },
+        onclick: () => { questions.push({ prompt: '', lines: ['', ''], points: 1 }); drawQuestions(); },
       }, '+ Add question'),
       h('div', { class: 'field', style: 'margin-top:20px' },
         h('label', { for: 'f-tb' }, 'Tiebreaker ', h('span', { class: 'hint' }, 'optional number guess; closest wins ties')),
@@ -373,6 +429,20 @@ function picksTab(pool, { myEntry, refresh }) {
   const errorSlot = h('div');
   const nameInput = h('input', { id: 'e-name', maxlength: '80', required: true, placeholder: 'Your name' });
   const tbInput = pool.tiebreaker && h('input', { id: 'e-tb', type: 'number', step: 'any', disabled: readOnly, value: myEntry?.tiebreakerGuess ?? '' });
+  const radios = {};
+  const hasOdds = pool.questions.some((q) => q.odds);
+
+  function fill(chooseIndex, message) {
+    for (const q of pool.questions) {
+      const i = chooseIndex(q);
+      picks[q.id] = q.options[i];
+      radios[q.id][i].checked = true;
+    }
+    toast(message);
+  }
+  const rollDice = () => fill((q) => rollIndex(q.odds, q.options.length),
+    hasOdds ? '🎲 Rolled! Favorites come up more often, but upsets happen.' : '🎲 Rolled! Every option had an equal chance.');
+  const takeFavorites = () => fill((q) => favoriteIndex(q.odds, q.options.length), 'Picked the favorite in every game.');
 
   async function submit(e) {
     e.preventDefault();
@@ -405,14 +475,23 @@ function picksTab(pool, { myEntry, refresh }) {
         ? `Your picks as ${myEntry.name}.`
         : `You’re entered as ${myEntry.name}. Change any pick and save before the pool locks.`)
       : h('div', { class: 'field' }, h('label', { for: 'e-name' }, 'Your name'), nameInput),
+    !readOnly && h('div', { class: 'row', style: 'margin-bottom:4px' },
+      h('button', { type: 'button', class: 'btn btn-secondary btn-small', onclick: rollDice }, '🎲 Roll the dice'),
+      hasOdds && h('button', { type: 'button', class: 'btn btn-secondary btn-small', onclick: takeFavorites }, 'Pick all favorites'),
+      h('span', { class: 'small muted' }, hasOdds ? 'Dice are weighted by the odds. Change any pick before you submit.' : 'Fills in random picks. Change any before you submit.')),
     pool.questions.map((q) => {
       const mine = picks[q.id];
+      const chances = q.odds ? winChances(q.odds, q.options.length) : null;
+      radios[q.id] = [];
       return h('fieldset', { class: 'question', style: 'border:0;margin:0;padding-left:0;padding-right:0' },
         h('legend', { style: 'padding:0' }, h('strong', {}, q.prompt), ' ', h('span', { class: 'meta' }, `${q.points} pt${q.points === 1 ? '' : 's'}`)),
-        h('div', { class: 'choices' }, q.options.map((o) =>
-          h('label', { class: 'choice' },
-            h('input', { type: 'radio', name: `q-${q.id}`, value: o, checked: mine === o, disabled: readOnly, onchange: () => { picks[q.id] = o; } }),
-            h('span', {}, o)))),
+        h('div', { class: 'choices' }, q.options.map((o, i) => {
+          const radio = h('input', { type: 'radio', name: `q-${q.id}`, value: o, checked: mine === o, disabled: readOnly, onchange: () => { picks[q.id] = o; } });
+          radios[q.id].push(radio);
+          return h('label', { class: 'choice' }, radio,
+            h('span', {}, o, chances && h('small', { class: 'odds' },
+              q.odds[i] != null ? `${formatMoneyline(q.odds[i])} · ` : '', `${Math.round(chances[i] * 100)}%`)));
+        })),
         q.result !== null && mine && h('div', { class: `pick-result ${mine === q.result ? 'good' : 'bad'}` },
           mine === q.result ? `✓ Correct, +${q.points}` : `✗ Answer: ${q.result}`));
     }),
@@ -558,3 +637,7 @@ function adminTab(pool, { refresh }) {
         },
       }, 'Delete pool')));
 }
+
+// Start last so every route's helpers and templates are defined.
+window.addEventListener('hashchange', route);
+route();

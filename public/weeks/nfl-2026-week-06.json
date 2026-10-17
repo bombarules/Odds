@@ -1,0 +1,244 @@
+{
+  "league": "NFL",
+  "season": 2026,
+  "week": 6,
+  "title": "NFL 2026 Week 6 picks",
+  "description": "Pick the winner of every Sunday and Monday game. Closest guess on total points in the Monday night game breaks ties.",
+  "oddsAsOf": "2026-10-17",
+  "lockAt": "2026-10-18T13:30:00Z",
+  "games": [
+    {
+      "label": "Texans vs Jaguars (London)",
+      "teams": [
+        "Texans",
+        "Jaguars"
+      ],
+      "odds": [
+        124,
+        -148
+      ]
+    },
+    {
+      "teams": [
+        "Bears",
+        "Falcons"
+      ],
+      "odds": [
+        -118,
+        -102
+      ]
+    },
+    {
+      "teams": [
+        "Jets",
+        "Patriots"
+      ],
+      "odds": [
+        275,
+        -350
+      ]
+    },
+    {
+      "teams": [
+        "Ravens",
+        "Browns"
+      ],
+      "odds": [
+        -245,
+        200
+      ]
+    },
+    {
+      "teams": [
+        "Bills",
+        "Raiders"
+      ],
+      "odds": [
+        -240,
+        195
+      ]
+    },
+    {
+      "teams": [
+        "Steelers",
+        "Buccaneers"
+      ],
+      "odds": [
+        -139,
+        119
+      ]
+    },
+    {
+      "teams": [
+        "Titans",
+        "Colts"
+      ],
+      "odds": [
+        270,
+        -340
+      ]
+    },
+    {
+      "teams": [
+        "Saints",
+        "Giants"
+      ],
+      "odds": [
+        -112,
+        -108
+      ]
+    },
+    {
+      "teams": [
+        "Panthers",
+        "Eagles"
+      ],
+      "odds": [
+        -105,
+        -115
+      ]
+    },
+    {
+      "teams": [
+        "Cardinals",
+        "Rams"
+      ],
+      "odds": [
+        600,
+        -900
+      ]
+    },
+    {
+      "teams": [
+        "Chargers",
+        "Chiefs"
+      ],
+      "odds": [
+        355,
+        -460
+      ]
+    },
+    {
+      "teams": [
+        "Cowboys",
+        "Packers"
+      ],
+      "odds": [
+        100,
+        -120
+      ]
+    },
+    {
+      "label": "Commanders vs 49ers (Monday night)",
+      "teams": [
+        "Commanders",
+        "49ers"
+      ],
+      "odds": [
+        330,
+        -425
+      ]
+    }
+  ],
+  "tiebreaker": {
+    "prompt": "Total points in Commanders vs 49ers (Monday night)",
+    "line": 51.5
+  },
+  "sources": [
+    "https://www.foxsports.com/stories/nfl/2026-nfl-odds-week-6-lines-spreads-results-all-14-games",
+    "https://www.espn.com/espn/betting/story/_/id/50147670/2026-nfl-week-6-schedule-odds-point-spreads-totals",
+    "https://www.vegasinsider.com/nfl/nfl-week-6-odds-2026/",
+    "https://www.covers.com/nfl/week-6-odds-opening-lines-2026"
+  ],
+  "claude": {
+    "name": "Claude",
+    "method": "Took the favorite when the odds give it at least a 60% chance; rolled a die weighted by the odds for closer games.",
+    "picks": [
+      {
+        "pick": "Texans",
+        "how": "dice",
+        "roll": 0.281,
+        "favorite": "Jaguars",
+        "chance": 0.572
+      },
+      {
+        "pick": "Bears",
+        "how": "dice",
+        "roll": 0.171,
+        "favorite": "Bears",
+        "chance": 0.517
+      },
+      {
+        "pick": "Patriots",
+        "how": "favorite",
+        "favorite": "Patriots",
+        "chance": 0.745
+      },
+      {
+        "pick": "Ravens",
+        "how": "favorite",
+        "favorite": "Ravens",
+        "chance": 0.681
+      },
+      {
+        "pick": "Bills",
+        "how": "favorite",
+        "favorite": "Bills",
+        "chance": 0.676
+      },
+      {
+        "pick": "Buccaneers",
+        "how": "dice",
+        "roll": 0.881,
+        "favorite": "Steelers",
+        "chance": 0.56
+      },
+      {
+        "pick": "Colts",
+        "how": "favorite",
+        "favorite": "Colts",
+        "chance": 0.741
+      },
+      {
+        "pick": "Giants",
+        "how": "dice",
+        "roll": 0.912,
+        "favorite": "Saints",
+        "chance": 0.504
+      },
+      {
+        "pick": "Panthers",
+        "how": "dice",
+        "roll": 0.325,
+        "favorite": "Eagles",
+        "chance": 0.511
+      },
+      {
+        "pick": "Rams",
+        "how": "favorite",
+        "favorite": "Rams",
+        "chance": 0.863
+      },
+      {
+        "pick": "Chiefs",
+        "how": "favorite",
+        "favorite": "Chiefs",
+        "chance": 0.789
+      },
+      {
+        "pick": "Packers",
+        "how": "dice",
+        "roll": 0.933,
+        "favorite": "Packers",
+        "chance": 0.522
+      },
+      {
+        "pick": "49ers",
+        "how": "favorite",
+        "favorite": "49ers",
+        "chance": 0.777
+      }
+    ],
+    "tiebreakerGuess": 52
+  }
+}
