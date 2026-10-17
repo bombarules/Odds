@@ -236,3 +236,6 @@ tr.me td { background: var(--accent-soft); }
   max-width: calc(100% - 32px);
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.choice .odds { display: block; font-size: 0.75rem; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+.choice input:checked + span .odds { color: var(--accent); }

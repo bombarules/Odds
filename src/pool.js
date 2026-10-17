@@ -1,5 +1,6 @@
 // Domain logic for office pools: validation, picks, scoring and public views.
 import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { isMoneyline } from '../public/odds.js';
 
 export const LIMITS = {
   name: 80,
@@ -61,14 +62,28 @@ function parseQuestions(raw) {
     if (!q || typeof q !== 'object') throw new ValidationError(`${label} is invalid`);
     const prompt = text(q.prompt, `${label} prompt`, LIMITS.prompt);
     if (!Array.isArray(q.options)) throw new ValidationError(`${label} needs options`);
-    const options = q.options.map((o) => text(o, `${label} option`, LIMITS.option, { required: false })).filter(Boolean);
+    // Odds line up with options, so drop blank options and their odds together.
+    const rawOdds = Array.isArray(q.odds) ? q.odds : [];
+    const pairs = q.options
+      .map((o, j) => [text(o, `${label} option`, LIMITS.option, { required: false }), rawOdds[j]])
+      .filter(([o]) => o);
+    const options = pairs.map(([o]) => o);
     if (options.length < 2) throw new ValidationError(`${label} needs at least two options`);
     if (options.length > LIMITS.options) throw new ValidationError(`${label} has too many options`);
     if (new Set(options.map((o) => o.toLowerCase())).size !== options.length) {
       throw new ValidationError(`${label} has duplicate options`);
     }
     const points = q.points === undefined || q.points === '' ? 1 : number(q.points, `${label} points`, { min: 1, max: 100, integer: true });
-    return { id: newId(4), prompt, options, points, result: null };
+    let odds = null;
+    if (pairs.some(([, n]) => n !== undefined && n !== null && n !== '')) {
+      odds = pairs.map(([o, n]) => {
+        if (n === undefined || n === null || n === '') return null;
+        const v = Number(n);
+        if (!isMoneyline(v)) throw new ValidationError(`${label}: odds for "${o}" must be a moneyline like -150 or +130`);
+        return v;
+      });
+    }
+    return { id: newId(4), prompt, options, odds, points, result: null };
   });
 }
 
@@ -204,7 +219,7 @@ export function publicView(pool, { now = Date.now(), viewerEntryId = null, admin
     pot: pool.entryFee * pool.entries.length,
     lockAt: pool.lockAt,
     locked,
-    questions: pool.questions.map(({ id, prompt, options, points, result }) => ({ id, prompt, options, points, result })),
+    questions: pool.questions.map(({ id, prompt, options, odds = null, points, result }) => ({ id, prompt, options, odds, points, result })),
     tiebreaker: pool.tiebreaker,
     entries: pool.entries.map((e) => {
       const visible = showPicks || e.id === viewerEntryId;
