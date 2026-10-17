@@ -1,0 +1,17 @@
+{
+  "name": "pool",
+  "version": "1.0.0",
+  "description": "Office pool app: create a pool, share the link, collect picks, score the leaderboard.",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
