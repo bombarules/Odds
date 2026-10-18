@@ -429,9 +429,16 @@ function localNotice() {
     h('a', { href: '#/help' }, 'Show me how'));
 }
 
-const canShare = () => typeof navigator.share === 'function';
+// Set by the Pool Android app so Share and Copy use the phone's share sheet and clipboard.
+const androidApp = () => window.PoolAndroid;
+
+const canShare = () => Boolean(androidApp()) || typeof navigator.share === 'function';
 
 async function shareLink(title, url) {
+  if (androidApp()) {
+    androidApp().share(title, `Join my pool “${title}” and make your picks:`, url);
+    return;
+  }
   try {
     await navigator.share({ title, text: `Join my pool “${title}” and make your picks:`, url });
   } catch (err) {
@@ -455,6 +462,10 @@ function stat(label, value) {
 }
 
 async function copy(textValue, message) {
+  if (androidApp()) {
+    androidApp().copy(textValue);
+    return;
+  }
   try {
     await navigator.clipboard.writeText(textValue);
     toast(message);
