@@ -1,4 +1,4 @@
-// Single-page client for Pool. Routes live in the URL hash:
+// Single-page client for Odds. Routes live in the URL hash:
 //   #/            home and your pools
 //   #/new         create a pool
 //   #/p/:id       a pool (picks, leaderboard, all picks, organizer tools)
@@ -118,7 +118,7 @@ async function route() {
 // ---------- home ----------
 
 function homePage() {
-  document.title = 'Pool';
+  document.title = 'Odds';
   const saved = Object.entries(loadSaved()).sort((a, b) => (b[1].seenAt ?? 0) - (a[1].seenAt ?? 0));
   render(
     h('section', { class: 'hero' },
@@ -192,7 +192,7 @@ const TEMPLATES = {
 };
 
 function createPage() {
-  document.title = 'New pool · Pool';
+  document.title = 'New pool · Odds';
   let questions = [];
   let slate = null;
   const errorSlot = h('div');
@@ -364,7 +364,7 @@ async function poolPage(id, initialTab) {
   const myEntry = pool.entries.find((e) => e.id === c.entryId && e.picks) ?? null;
   if (c.entryId && !myEntry) savePool(id, { entryId: undefined, editToken: undefined });
   savePool(id, { name: pool.name });
-  document.title = `${pool.name} · Pool`;
+  document.title = `${pool.name} · Odds`;
 
   const tabs = [
     ['picks', myEntry ? 'My picks' : pool.locked ? 'Picks' : 'Enter'],
@@ -424,12 +424,12 @@ function isLocalOnly() {
 function localNotice() {
   return h('div', { class: 'error', role: 'note' },
     h('strong', {}, 'This link only works on this phone. '),
-    'You opened Pool at “localhost”, so invite links point back to this phone. Run ',
-    h('code', {}, 'npm run share'), ' and open Pool from the https link it gives you. ',
+    'You opened Odds at “localhost”, so invite links point back to this phone. Run ',
+    h('code', {}, 'npm run share'), ' and open Odds from the https link it gives you. ',
     h('a', { href: '#/help' }, 'Show me how'));
 }
 
-// Set by the Pool Android app so Share and Copy use the phone's share sheet and clipboard.
+// Set by the Odds Android app so Share and Copy use the phone's share sheet and clipboard.
 const androidApp = () => window.PoolAndroid;
 
 const canShare = () => Boolean(androidApp()) || typeof navigator.share === 'function';
@@ -700,25 +700,25 @@ const BROWSERS = {
   chrome: {
     label: 'Chrome (Android)',
     share: ['Open your pool and tap Share under the invite link.', 'Pick Messages, WhatsApp, email or any app, and send it.', 'No Share button? Tap Copy, then paste the link into a text.'],
-    join: ['Tap the link in the text. It opens in Chrome.', 'Type your name, tap a team in every game (or 🎲 Roll the dice) and tap Submit picks.', 'To come back later, open the same link in Chrome. Pool remembers you there.'],
+    join: ['Tap the link in the text. It opens in Chrome.', 'Type your name, tap a team in every game (or 🎲 Roll the dice) and tap Submit picks.', 'To come back later, open the same link in Chrome. Odds remembers you there.'],
     home: 'Tap ⋮ (top right) → Add to Home screen, so the pool is one tap away.',
   },
   safari: {
     label: 'Safari (iPhone)',
     share: ['Open your pool and tap Share under the invite link.', 'Pick Messages, Mail or WhatsApp and send it.', 'No Share button? Tap Copy, then paste the link into a message.'],
-    join: ['Tap the link in Messages. It opens in Safari.', 'Type your name, tap a team in every game (or 🎲 Roll the dice) and tap Submit picks.', 'To come back later, open the same link in Safari. Pool remembers you there.'],
+    join: ['Tap the link in Messages. It opens in Safari.', 'Type your name, tap a team in every game (or 🎲 Roll the dice) and tap Submit picks.', 'To come back later, open the same link in Safari. Odds remembers you there.'],
     home: 'Tap the Share icon (□↑) at the bottom → Add to Home Screen.',
   },
   chromeios: {
     label: 'Chrome (iPhone)',
     share: ['Open your pool and tap Share under the invite link.', 'Pick Messages, Mail or WhatsApp and send it.', 'No Share button? Tap Copy, then paste the link into a message.'],
-    join: ['Links from Messages open in Safari unless Chrome is your default browser (Settings → Apps → Chrome → Default Browser App).', 'Type your name, pick every game (or 🎲 Roll the dice) and tap Submit picks.', 'Always come back in the same browser you joined with. Pool remembers you per browser.'],
+    join: ['Links from Messages open in Safari unless Chrome is your default browser (Settings → Apps → Chrome → Default Browser App).', 'Type your name, pick every game (or 🎲 Roll the dice) and tap Submit picks.', 'Always come back in the same browser you joined with. Odds remembers you per browser.'],
     home: 'Tap the Share icon (□↑) in the address bar → Add to Home Screen.',
   },
 };
 
 function helpPage() {
-  document.title = 'How to invite · Pool';
+  document.title = 'How to invite · Odds';
   let current = /iPhone|iPad/.test(navigator.userAgent) ? (/CriOS/.test(navigator.userAgent) ? 'chromeios' : 'safari') : 'chrome';
   const tabBar = h('div', { class: 'tabs', role: 'tablist' });
   const panel = h('div');
@@ -739,10 +739,10 @@ function helpPage() {
     isLocalOnly() && localNotice(),
     h('section', { class: 'card' },
       h('h2', {}, '1. Get a link that works on other phones'),
-      h('p', { class: 'muted' }, 'A link that starts with localhost only works on the phone running Pool. To get a real link, run Pool with a public address. In Termux:'),
+      h('p', { class: 'muted' }, 'A link that starts with localhost only works on the phone running Odds. To get a real link, run Odds with a public address. In Termux:'),
       h('pre', { class: 'code' }, 'cd ~/Pool\ngit pull\npkg install cloudflared   # first time only\nnpm run share'),
       steps([
-        'Wait for “Your public Pool link: https://….trycloudflare.com”.',
+        'Wait for “Your public Odds link: https://….trycloudflare.com”.',
         'Open that https link in Chrome or Safari on your phone (long-press it in Termux → Open URL, or type it in).',
         'Create your pool from that page. Its invite link now works for anyone, on Wi-Fi or mobile data.',
         'Leave Termux running. Closing it or pressing Ctrl+C turns the link off. Each run makes a new link, so re-send invites if you restart.',

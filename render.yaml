@@ -2,7 +2,7 @@
 # Render's free instances lose their disk on every restart.
 services:
   - type: web
-    name: pool
+    name: odds
     runtime: node
     plan: free
     buildCommand: npm install

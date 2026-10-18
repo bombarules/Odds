@@ -163,6 +163,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const port = Number(process.env.PORT) || 3000;
   const store = await openStore(join(ROOT, 'data', 'pools.json'));
   createApp(store).listen(port, () => {
-    console.log(`Pool is running at http://localhost:${port}`);
+    console.log(`Odds is running at http://localhost:${port}`);
   });
 }
