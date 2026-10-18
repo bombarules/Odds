@@ -1,4 +1,4 @@
-# Pool
+# Odds
 
 A small web app for running an office pool: sports picks, an awards ballot, a baby pool, anything with a set of questions and a right answer.
 
@@ -35,7 +35,7 @@ Pool runs on [Render](https://render.com)'s free plan and keeps its data in a fr
 
 1. **Upstash:** sign up, then click *Create Database* (Redis, any region, free plan). On the database page, find the **REST API** section and copy `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
 2. **Render:** sign up with GitHub, then choose *New → Blueprint* and pick this repository. Render reads `render.yaml`, asks for the two Upstash values (paste them in), and deploys.
-3. Your link is shown at the top of the service page, e.g. `https://pool-xxxx.onrender.com`. Create pools there and share invites as usual.
+3. Your link is shown at the top of the service page, e.g. `https://odds-xxxx.onrender.com`. Create pools there and share invites as usual.
 
 Render redeploys automatically whenever `main` changes, so each week's new slate shows up without you doing anything. On the free plan the app sleeps after 15 minutes without visitors. The first visit after that takes up to a minute to wake it, and nothing is lost.
 

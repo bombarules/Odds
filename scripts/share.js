@@ -15,7 +15,7 @@ const bin = process.env.CLOUDFLARED || 'cloudflared';
 const store = await openStore(join(ROOT, 'data', 'pools.json'));
 const server = createApp(store);
 await new Promise((resolve, reject) => server.once('error', reject).listen(port, resolve));
-console.log(`Pool is running at http://localhost:${port}`);
+console.log(`Odds is running at http://localhost:${port}`);
 console.log('Getting your public link…');
 
 const tunnel = spawn(bin, ['tunnel', '--no-autoupdate', '--url', `http://localhost:${port}`], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -29,7 +29,7 @@ const watch = (chunk) => {
     .then(() => writeFile(join(ROOT, 'data', 'public-link.txt'), `${url}\n`))
     .catch(() => {});
   console.log(`
-  ✅ Your public Pool link:
+  ✅ Your public Odds link:
 
      ${url}
 

@@ -97,7 +97,7 @@ test('full pool lifecycle over HTTP', async () => {
 test('serves the app shell and blocks path traversal', async () => {
   const home = await fetch(`${base}/`);
   assert.equal(home.status, 200);
-  assert.match(await home.text(), /<title>Pool<\/title>/);
+  assert.match(await home.text(), /<title>Odds<\/title>/);
   const js = await fetch(`${base}/app.js`);
   assert.match(js.headers.get('content-type'), /javascript/);
   const sneaky = await fetch(`${base}/..%2fpackage.json`);
