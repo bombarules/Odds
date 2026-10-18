@@ -10,6 +10,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
+    "share": "node scripts/share.js",
     "dev": "node --watch src/server.js",
     "test": "node --test",
     "check-weeks": "node scripts/check-weeks.js",

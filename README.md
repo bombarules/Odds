@@ -17,10 +17,17 @@ No sign-up needed. The organizer and each entrant get a private key that's saved
 Requires Node.js 18 or newer. There are no dependencies to install.
 
 ```sh
-npm start          # http://localhost:3000
+npm run share      # start Pool with a public https link for invites
+npm start          # http://localhost:3000 (only this device can open it)
 npm run dev        # restart on file changes
 npm test           # unit and API tests
 ```
+
+### Inviting people
+
+A `localhost` link only works on the device running Pool, so invites sent from it fail on everyone else's phone. `npm run share` starts Pool and opens a free Cloudflare quick tunnel (no account needed). Open the `https://….trycloudflare.com` link it prints, create the pool from there, and the invite links work on any phone, in Safari or Chrome. Install cloudflared first: `pkg install cloudflared` in Termux, `brew install cloudflared` on a Mac. The link lasts while the command runs, and each run gets a new one.
+
+Video walkthrough: [docs/how-to-invite.mp4](docs/how-to-invite.mp4). Step-by-step instructions for each browser are on the app's *How to invite people* page.
 
 Environment variables:
 
@@ -44,7 +51,7 @@ src/pool.js     validation, scoring, leaderboard, what the public can see
 public/odds.js  moneyline → win chance, weighted dice rolls
 public/slate.js weekly slates and Claude's picks
 public/weeks/   one JSON file per week of games and odds
-scripts/        roll Claude's picks, validate slates
+scripts/        share link, roll Claude's picks, validate slates
 src/store.js    JSON-file storage with atomic writes
 src/server.js   HTTP server: JSON API under /api plus the static app
 public/         single-page app (vanilla JS, no build step)
