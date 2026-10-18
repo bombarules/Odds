@@ -1,0 +1,18 @@
+# Render Blueprint: free web service. Pools are kept in Upstash Redis because
+# Render's free instances lose their disk on every restart.
+services:
+  - type: web
+    name: pool
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false

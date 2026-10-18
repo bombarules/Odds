@@ -2,17 +2,17 @@
 // phone, on any network. Uses a free Cloudflare quick tunnel (no account).
 //   npm run share
 import { spawn } from 'node:child_process';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createApp } from '../src/server.js';
-import { Store } from '../src/store.js';
+import { openStore } from '../src/store.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const port = Number(process.env.PORT) || 3000;
-const dataFile = process.env.DATA_FILE || join(ROOT, 'data', 'pools.json');
 const bin = process.env.CLOUDFLARED || 'cloudflared';
 
-const store = await new Store(dataFile).load();
+const store = await openStore(join(ROOT, 'data', 'pools.json'));
 const server = createApp(store);
 await new Promise((resolve, reject) => server.once('error', reject).listen(port, resolve));
 console.log(`Pool is running at http://localhost:${port}`);
@@ -24,6 +24,10 @@ const watch = (chunk) => {
   const url = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/.exec(chunk.toString())?.[0];
   if (!url || announced) return;
   announced = true;
+  // Saved so the link can be found later (npm run link), e.g. after a boot start.
+  mkdir(join(ROOT, 'data'), { recursive: true })
+    .then(() => writeFile(join(ROOT, 'data', 'public-link.txt'), `${url}\n`))
+    .catch(() => {});
   console.log(`
   ✅ Your public Pool link:
 

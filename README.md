@@ -29,12 +29,36 @@ A `localhost` link only works on the device running Pool, so invites sent from i
 
 Video walkthrough: [docs/how-to-invite.mp4](docs/how-to-invite.mp4). Step-by-step instructions for each browser are on the app's *How to invite people* page.
 
+### Hosting it for free (always on, one link that never changes)
+
+Pool runs on [Render](https://render.com)'s free plan and keeps its data in a free [Upstash](https://upstash.com) Redis database, because free hosts wipe their disk on every restart. No credit card is needed for either.
+
+1. **Upstash:** sign up, then click *Create Database* (Redis, any region, free plan). On the database page, find the **REST API** section and copy `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+2. **Render:** sign up with GitHub, then choose *New → Blueprint* and pick this repository. Render reads `render.yaml`, asks for the two Upstash values (paste them in), and deploys.
+3. Your link is shown at the top of the service page, e.g. `https://pool-xxxx.onrender.com`. Create pools there and share invites as usual.
+
+Render redeploys automatically whenever `main` changes, so each week's new slate shows up without you doing anything. On the free plan the app sleeps after 15 minutes without visitors. The first visit after that takes up to a minute to wake it, and nothing is lost.
+
+To move pools from your phone to the hosted app, run this once in Termux, using your own values:
+
+```sh
+cd ~/Pool
+UPSTASH_REDIS_REST_URL=https://… UPSTASH_REDIS_REST_TOKEN=… npm run copy-to-upstash
+```
+
+Then restart the service on Render (*Manual Deploy → Restart service*). You'll need to sign in as organizer again on the new address: copy the organizer link on your phone and replace its start with your Render address.
+
+### Starting on boot (Termux)
+
+Install the **Termux:Boot** add-on from the same place you got Termux, and open it once. Then run `sh scripts/termux-boot.sh` once. After every phone restart, Pool starts with a public link by itself. Run `npm run link` to see the current link, which changes on every start. The log is in `data/share.log`.
+
 Environment variables:
 
-| Variable    | Default           | Purpose                       |
-|-------------|-------------------|-------------------------------|
+| Variable | Default | Purpose |
+|---|---|---|
 | `PORT`      | `3000`            | Port to listen on             |
 | `DATA_FILE` | `data/pools.json` | Where pools are saved on disk |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | unset | Save pools in Upstash Redis instead of on disk |
 
 ## Adding a new week
 
@@ -52,7 +76,7 @@ public/odds.js  moneyline → win chance, weighted dice rolls
 public/slate.js weekly slates and Claude's picks
 public/weeks/   one JSON file per week of games and odds
 scripts/        share link, roll Claude's picks, validate slates
-src/store.js    JSON-file storage with atomic writes
+src/store.js    JSON-file storage with atomic writes, or Upstash Redis
 src/server.js   HTTP server: JSON API under /api plus the static app
 public/         single-page app (vanilla JS, no build step)
 test/           node:test suites

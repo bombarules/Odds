@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Store } from './store.js';
+import { openStore } from './store.js';
 import {
   ValidationError, addEntry, createPool, publicView, setResults, tokensMatch, updateEntry,
 } from './pool.js';
@@ -161,8 +161,7 @@ export function createApp(store) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT) || 3000;
-  const dataFile = process.env.DATA_FILE || join(ROOT, 'data', 'pools.json');
-  const store = await new Store(dataFile).load();
+  const store = await openStore(join(ROOT, 'data', 'pools.json'));
   createApp(store).listen(port, () => {
     console.log(`Pool is running at http://localhost:${port}`);
   });

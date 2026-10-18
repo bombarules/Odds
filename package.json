@@ -14,7 +14,9 @@
     "dev": "node --watch src/server.js",
     "test": "node --test",
     "check-weeks": "node scripts/check-weeks.js",
-    "claude-picks": "node scripts/claude-picks.js"
+    "claude-picks": "node scripts/claude-picks.js",
+    "link": "node -e \"try{process.stdout.write(require('fs').readFileSync('data/public-link.txt','utf8'))}catch{console.log('No link yet. Run npm run share first.')}\"",
+    "copy-to-upstash": "node scripts/copy-to-upstash.js"
   },
   "license": "MIT"
 }
