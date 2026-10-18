@@ -188,7 +188,7 @@ input:focus, textarea:focus, select:focus, .btn:focus-visible, .choice input:foc
 .choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .choice { position: relative; margin: 0; font-weight: 500; cursor: pointer; }
 .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.choice span {
+.choice > span {
   display: inline-block;
   padding: 8px 14px;
   border: 1px solid var(--border);
@@ -245,3 +245,14 @@ tr.me td { background: var(--accent-soft); }
 pre.code { background: var(--surface-2); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 0.9rem; margin: 0 0 12px; }
 code { background: var(--surface-2); border-radius: 4px; padding: 1px 5px; font-size: 0.9em; }
 .error code { background: transparent; font-weight: 600; }
+
+.choice > span.choice-body { display: flex; align-items: center; gap: 8px; }
+.team-logo, .team-badge { width: 28px; height: 28px; flex-shrink: 0; }
+.team-logo { object-fit: contain; }
+.team-badge { display: inline-grid; place-items: center; border-radius: 50%; color: #fff; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.02em; }
+.team-logo.small, .team-badge.small { width: 20px; height: 20px; font-size: 0.5rem; }
+.team-cell { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+@media (prefers-color-scheme: dark) {
+  .team-logo { filter: drop-shadow(0 0 1px rgb(255 255 255 / 0.35)); }
+  .team-badge { box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3); }
+}

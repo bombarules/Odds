@@ -5,6 +5,7 @@
 
 import { favoriteIndex, formatMoneyline, parseOptionLine, rollIndex, winChances } from './odds.js';
 import { claudeEntry, slateToPool } from './slate.js';
+import { findTeam } from './teams.js';
 
 const app = document.getElementById('app');
 const STORAGE_KEY = 'pool:v1';
@@ -438,6 +439,17 @@ async function shareLink(title, url) {
   }
 }
 
+// Team logo for an option that names an NFL team; falls back to a badge in the
+// team's color if the logo can't load. Nothing for non-team options.
+function teamMark(name, size = '') {
+  const team = findTeam(name);
+  if (!team) return null;
+  const badge = () => h('span', { class: `team-badge ${size}`, style: `background:${team.color}`, 'aria-hidden': 'true' }, team.code.toUpperCase());
+  const img = h('img', { class: `team-logo ${size}`, src: team.logo, alt: '', loading: 'lazy', decoding: 'async', referrerpolicy: 'no-referrer' });
+  img.addEventListener('error', () => img.replaceWith(badge()), { once: true });
+  return img;
+}
+
 function stat(label, value) {
   return h('div', { class: 'stat' }, h('div', { class: 'label' }, label), h('div', { class: 'value' }, value));
 }
@@ -521,8 +533,9 @@ function picksTab(pool, { myEntry, refresh }) {
           const radio = h('input', { type: 'radio', name: `q-${q.id}`, value: o, checked: mine === o, disabled: readOnly, onchange: () => { picks[q.id] = o; } });
           radios[q.id].push(radio);
           return h('label', { class: 'choice' }, radio,
-            h('span', {}, o, chances && h('small', { class: 'odds' },
-              q.odds[i] != null ? `${formatMoneyline(q.odds[i])} · ` : '', `${Math.round(chances[i] * 100)}%`)));
+            h('span', { class: 'choice-body' }, teamMark(o),
+              h('span', {}, o, chances && h('small', { class: 'odds' },
+                q.odds[i] != null ? `${formatMoneyline(q.odds[i])} · ` : '', `${Math.round(chances[i] * 100)}%`))));
         })),
         q.result !== null && mine && h('div', { class: `pick-result ${mine === q.result ? 'good' : 'bad'}` },
           mine === q.result ? `✓ Correct, +${q.points}` : `✗ Answer: ${q.result}`));
@@ -572,7 +585,7 @@ function allPicksTab(pool) {
             pool.questions.map((q) => {
               const p = e.picks?.[q.id] ?? '—';
               const cls = q.result === null ? '' : p === q.result ? 'cell-good' : 'cell-bad';
-              return h('td', { class: cls }, p);
+              return h('td', { class: cls }, h('span', { class: 'team-cell' }, p !== '—' && teamMark(p, 'small'), p));
             }),
             pool.tiebreaker && h('td', { class: 'num' }, e.tiebreakerGuess ?? '—')))),
         h('tfoot', {}, h('tr', {},
