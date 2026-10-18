@@ -239,3 +239,8 @@ tr.me td { background: var(--accent-soft); }
 
 .choice .odds { display: block; font-size: 0.75rem; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
 .choice input:checked + span .odds { color: var(--accent); }
+
+.share .btn { flex-shrink: 0; }
+pre.code { background: var(--surface-2); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 0.9rem; margin: 0 0 12px; }
+code { background: var(--surface-2); border-radius: 4px; padding: 1px 5px; font-size: 0.9em; }
+.error code { background: transparent; font-weight: 600; }

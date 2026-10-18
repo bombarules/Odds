@@ -87,7 +87,7 @@ const money = (n) => n.toLocaleString(undefined, { style: 'currency', currency: 
 const when = (iso) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
 function render(...nodes) {
-  app.replaceChildren(...nodes);
+  app.replaceChildren(...nodes.filter((n) => n || n === 0));
 }
 
 function errorBox(message) {
@@ -108,6 +108,7 @@ async function route() {
   window.scrollTo(0, 0);
   if (parts.length === 0) return homePage();
   if (parts[0] === 'new') return createPage();
+  if (parts[0] === 'help') return helpPage();
   if (parts[0] === 'p' && parts[1]) return poolPage(decodeURIComponent(parts[1]), parts[2]);
   render(h('div', { class: 'card empty' }, 'Page not found. ', h('a', { href: '#/' }, 'Go home')));
 }
@@ -122,7 +123,10 @@ function homePage() {
     h('section', { class: 'hero' },
       h('h1', {}, 'Run the office pool without the spreadsheet.'),
       h('p', {}, 'Write the questions, share one link, and everyone makes their picks. Picks stay hidden until the pool locks, then the leaderboard scores itself as you enter results.'),
-      h('a', { class: 'btn', href: '#/new' }, 'Create a pool')),
+      h('div', { class: 'row' },
+        h('a', { class: 'btn', href: '#/new' }, 'Create a pool'),
+        h('a', { class: 'btn btn-secondary', href: '#/help' }, 'How to invite people'))),
+    isLocalOnly() && localNotice(),
     h('section', { class: 'card' },
       h('h2', {}, 'Your pools'),
       saved.length === 0
@@ -398,12 +402,40 @@ async function poolPage(id, initialTab) {
         stat('Results in', `${lb.decidedCount} / ${lb.totalQuestions}`),
         stat(pool.locked ? 'Locked' : 'Locks', pool.lockAt ? when(pool.lockAt) : 'By organizer')),
       h('label', { for: 'share' }, 'Invite link'),
+      isLocalOnly() && localNotice(),
       h('div', { class: 'share' },
         h('input', { id: 'share', readonly: true, value: shareUrl, onfocus: (e) => e.target.select() }),
-        h('button', { class: 'btn btn-secondary', onclick: () => copy(shareUrl, 'Link copied') }, 'Copy'))),
+        canShare() && h('button', { class: 'btn', onclick: () => shareLink(pool.name, shareUrl) }, 'Share'),
+        h('button', { class: 'btn btn-secondary', onclick: () => copy(shareUrl, 'Link copied. Paste it in a text or email.') }, 'Copy')),
+      h('p', { class: 'small muted', style: 'margin:8px 0 0' },
+        'Friends tap the link, type their name and make picks. ', h('a', { href: '#/help' }, 'How to invite'))),
     tabBar,
     panel);
   drawTabs();
+}
+
+// localhost only ever means "this device", so a link built from it can't
+// work on anyone else's phone.
+function isLocalOnly() {
+  return ['localhost', '127.0.0.1', '[::1]', '::1'].includes(location.hostname) || location.hostname.endsWith('.localhost');
+}
+
+function localNotice() {
+  return h('div', { class: 'error', role: 'note' },
+    h('strong', {}, 'This link only works on this phone. '),
+    'You opened Pool at “localhost”, so invite links point back to this phone. Run ',
+    h('code', {}, 'npm run share'), ' and open Pool from the https link it gives you. ',
+    h('a', { href: '#/help' }, 'Show me how'));
+}
+
+const canShare = () => typeof navigator.share === 'function';
+
+async function shareLink(title, url) {
+  try {
+    await navigator.share({ title, text: `Join my pool “${title}” and make your picks:`, url });
+  } catch (err) {
+    if (err?.name !== 'AbortError') copy(url, 'Link copied. Paste it in a text or email.');
+  }
 }
 
 function stat(label, value) {
@@ -636,6 +668,71 @@ function adminTab(pool, { refresh }) {
           }
         },
       }, 'Delete pool')));
+}
+
+// ---------- help ----------
+
+const BROWSERS = {
+  chrome: {
+    label: 'Chrome (Android)',
+    share: ['Open your pool and tap Share under the invite link.', 'Pick Messages, WhatsApp, email or any app, and send it.', 'No Share button? Tap Copy, then paste the link into a text.'],
+    join: ['Tap the link in the text. It opens in Chrome.', 'Type your name, tap a team in every game (or 🎲 Roll the dice) and tap Submit picks.', 'To come back later, open the same link in Chrome. Pool remembers you there.'],
+    home: 'Tap ⋮ (top right) → Add to Home screen, so the pool is one tap away.',
+  },
+  safari: {
+    label: 'Safari (iPhone)',
+    share: ['Open your pool and tap Share under the invite link.', 'Pick Messages, Mail or WhatsApp and send it.', 'No Share button? Tap Copy, then paste the link into a message.'],
+    join: ['Tap the link in Messages. It opens in Safari.', 'Type your name, tap a team in every game (or 🎲 Roll the dice) and tap Submit picks.', 'To come back later, open the same link in Safari. Pool remembers you there.'],
+    home: 'Tap the Share icon (□↑) at the bottom → Add to Home Screen.',
+  },
+  chromeios: {
+    label: 'Chrome (iPhone)',
+    share: ['Open your pool and tap Share under the invite link.', 'Pick Messages, Mail or WhatsApp and send it.', 'No Share button? Tap Copy, then paste the link into a message.'],
+    join: ['Links from Messages open in Safari unless Chrome is your default browser (Settings → Apps → Chrome → Default Browser App).', 'Type your name, pick every game (or 🎲 Roll the dice) and tap Submit picks.', 'Always come back in the same browser you joined with. Pool remembers you per browser.'],
+    home: 'Tap the Share icon (□↑) in the address bar → Add to Home Screen.',
+  },
+};
+
+function helpPage() {
+  document.title = 'How to invite · Pool';
+  let current = /iPhone|iPad/.test(navigator.userAgent) ? (/CriOS/.test(navigator.userAgent) ? 'chromeios' : 'safari') : 'chrome';
+  const tabBar = h('div', { class: 'tabs', role: 'tablist' });
+  const panel = h('div');
+  const steps = (items) => h('ol', {}, items.map((t) => h('li', {}, t)));
+
+  function draw() {
+    tabBar.replaceChildren(...Object.entries(BROWSERS).map(([k, b]) =>
+      h('button', { class: 'tab', role: 'tab', 'aria-selected': String(k === current), onclick: () => { current = k; draw(); } }, b.label)));
+    const b = BROWSERS[current];
+    panel.replaceChildren(
+      h('section', { class: 'card' }, h('h2', {}, '2. Send the invite'), steps(b.share)),
+      h('section', { class: 'card' }, h('h2', {}, '3. What your friends do'), steps(b.join),
+        h('p', { class: 'small muted' }, 'Optional: ', b.home)));
+  }
+
+  render(
+    h('h1', {}, 'How to invite people'),
+    isLocalOnly() && localNotice(),
+    h('section', { class: 'card' },
+      h('h2', {}, '1. Get a link that works on other phones'),
+      h('p', { class: 'muted' }, 'A link that starts with localhost only works on the phone running Pool. To get a real link, run Pool with a public address. In Termux:'),
+      h('pre', { class: 'code' }, 'cd ~/Pool\ngit pull\npkg install cloudflared   # first time only\nnpm run share'),
+      steps([
+        'Wait for “Your public Pool link: https://….trycloudflare.com”.',
+        'Open that https link in Chrome or Safari on your phone (long-press it in Termux → Open URL, or type it in).',
+        'Create your pool from that page. Its invite link now works for anyone, on Wi-Fi or mobile data.',
+        'Leave Termux running. Closing it or pressing Ctrl+C turns the link off. Each run makes a new link, so re-send invites if you restart.',
+      ])),
+    h('h2', { style: 'margin-top:24px' }, 'Pick your browser'),
+    tabBar,
+    panel,
+    h('section', { class: 'card' },
+      h('h2', {}, 'If something goes wrong'),
+      h('ul', { class: 'muted' },
+        h('li', {}, '“Can’t connect” or “Site can’t be reached”: Termux was closed or npm run share stopped. Start it again and send the new link.'),
+        h('li', {}, 'Friend sees an empty form instead of their picks: they opened the link in a different browser. Use the one they joined with.'),
+        h('li', {}, 'Lost organizer access on a new device: on the Organizer tab, use Copy organizer link and open it on the other device.'))));
+  draw();
 }
 
 // Start last so every route's helpers and templates are defined.
