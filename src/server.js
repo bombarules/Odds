@@ -18,6 +18,8 @@ const TYPES = {
   '.svg': 'image/svg+xml',
   '.json': 'application/json; charset=utf-8',
   '.ico': 'image/x-icon',
+  '.png': 'image/png',
+  '.webmanifest': 'application/manifest+json',
 };
 
 function send(res, status, body) {

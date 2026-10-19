@@ -1,1 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#4a6894"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- Odds icon: an original top-hat-and-monocle duck on a gold coin -->
+  <rect width="108" height="108" fill="#4A6894"/>
+  <circle cx="54" cy="56" r="40" fill="#E9B73F"/>
+  <circle cx="54" cy="56" r="34" fill="none" stroke="#C9952A" stroke-width="2.5"/>
+  <!-- feather tufts -->
+  <path fill="#FFFFFF" d="M33,56 L24,52 L31,61 L22,62 L32,67 Z"/>
+  <!-- head -->
+  <path fill="#FFFFFF" d="M54,38 C68,38 76,48 76,60 C76,73 66,82 54,82 C42,82 32,73 32,60 C32,48 40,38 54,38 Z"/>
+  <!-- duck bill, sticking out past the face -->
+  <path fill="#F08A24" d="M44,63 C49,55 72,54 84,61 C86,63 85,65 82,66 C70,70 50,71 44,63 Z"/>
+  <path fill="#C96A12" d="M46,65 C56,67 72,67 82,66 C76,73 54,74 46,65 Z"/>
+  <path fill="#C96A12" d="M70,59 a1.2,1.2 0 1,1 2.4,0 a1.2,1.2 0 1,1 -2.4,0 Z"/>
+  <!-- eyes -->
+  <path fill="#1C1F26" d="M44,52 a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0 Z"/>
+  <path fill="#1C1F26" d="M58,52 a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0 Z"/>
+  <!-- monocle and chain -->
+  <path fill="none" stroke="#C9952A" stroke-width="2" d="M55.2,52 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0 Z"/>
+  <path fill="none" stroke="#C9952A" stroke-width="1.4" d="M66,57 C70,64 70,72 64,78"/>
+  <!-- top hat -->
+  <path fill="#1C1F26" d="M33,41 C40,37 68,37 75,41 L75,44 C68,41 40,41 33,44 Z"/>
+  <path fill="#1C1F26" d="M40,40 L42,18 L66,18 L68,40 Z"/>
+  <path fill="#E9B73F" d="M41.2,34 L66.8,34 L67.3,38 L40.7,38 Z"/>
+</svg>

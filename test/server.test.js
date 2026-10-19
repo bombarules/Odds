@@ -98,6 +98,11 @@ test('serves the app shell and blocks path traversal', async () => {
   const home = await fetch(`${base}/`);
   assert.equal(home.status, 200);
   assert.match(await home.text(), /<title>Odds<\/title>/);
+  const manifest = await fetch(`${base}/manifest.webmanifest`);
+  assert.match(manifest.headers.get('content-type'), /manifest\+json/);
+  assert.equal((await manifest.json()).name, 'Odds');
+  const icon = await fetch(`${base}/icons/icon-192.png`);
+  assert.equal(icon.headers.get('content-type'), 'image/png');
   const js = await fetch(`${base}/app.js`);
   assert.match(js.headers.get('content-type'), /javascript/);
   const sneaky = await fetch(`${base}/..%2fpackage.json`);
