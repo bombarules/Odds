@@ -71,8 +71,7 @@ p { margin: 0 0 1rem; }
   color: var(--text);
   text-decoration: none;
 }
-.brand svg { width: 26px; height: 26px; fill: var(--accent); }
-.brand svg .inner { fill: var(--bg); }
+.brand-icon { width: 30px; height: 30px; border-radius: 8px; }
 
 main {
   max-width: 880px;
